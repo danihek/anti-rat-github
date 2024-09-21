@@ -2,19 +2,19 @@
 
 CYCLES=1
 SILENT=0
+NO_TOR=0
 USERID=17
 TOR_PORT=9053
 TOR_PID=""
 CONTENT_SIZE=10
 DOMAIN="https://example.donotexist"
-CONTENT_DIRECTORIES=("browser_ext" "discord" "sus_files" "wallet")
 
 succ=0
 fail=0
 current_cycle=1
 
 send_data() {
-  curl -s -X POST "$DOMAIN/$1" \
+  curl -s -o /dev/null -X POST "$DOMAIN/$1" \
     -H "userid: $USERID" \
     -H "Content-Type: application/json" \
     -d "$2"
@@ -29,25 +29,33 @@ send_data() {
 }
 
 start_tor() {
-  kill $TOR_PID
-  run_command tor --SocksPort $TOR_PORT &
-  export "ALL_PROXY=socks5://127.0.0.1:$TOR_PORT"
-  echo "Exported ALL_PROXY variable to $ALL_PROXY"
-  TOR_PID=$!
+  if [ "$NO_TOR" == "0" ]; then
+    kill_tor
+    tor --SocksPort $TOR_PORT &
+    TOR_PID=$!
+    export "ALL_PROXY=socks5://127.0.0.1:$TOR_PORT"
+  fi
+}
+
+kill_tor() {
+  if [ "$NO_TOR" == "0" ]; then
+    kill $TOR_PID
+  fi
 }
 
 run_command() {
-    if [ "$SILENT" == 1 ]; then
-        "$@" > /dev/null 2>&1  # Suppress output
-    else
-        "$@"  # Show output
-    fi
+  if [ "$SILENT" == 1 ]; then
+    "$@" > /dev/null 2>&1  # Suppress output
+  else
+    "$@"  # Show output
+  fi
 }
 
 # Function to display help
 function show_help {
     echo "Usage: unrat [OPTIONS]"
     echo "  -h        Show this help message."
+    echo "  -n        Do not use Tor, ip is exposed."
     echo "  -l        Only log, python scripts are silent."
     echo
     echo "Options:"
@@ -60,11 +68,14 @@ function show_help {
 }
 
 # Parse options
-while getopts ":hlu:c:s:p:d:" opt; do
+while getopts ":hnlu:c:s:p:d:" opt; do
     case $opt in
         h)
             show_help
             exit 0
+            ;;
+        n)
+            NO_TOR=1
             ;;
         l)
             SILENT=1
@@ -107,23 +118,38 @@ if [[ -z "$CONTENT_SIZE" || "$CONTENT_SIZE" -le 0 ]]; then
     CONTENT_SIZE=10
 fi
 
+echo "Settings:"
+echo " USERID       $USERID"
+echo " SILENT       $SILENT"
+echo " NO_TOR       $NO_TOR"
+echo " CYCLES       $CYCLES"
+echo " DOMAIN       $DOMAIN"
+echo " TOR_PORT     $TOR_PORT"
+echo " CONTENT_SIZE $CONTENT_SIZE"
+echo
+echo "------------------------------"
+echo
+
 while [[ $current_cycle -le $CYCLES ]] ; do
-  start_tor
   tempfolder="tmp$(date +%s%N | cut -b1-13)"
   mkdir $tempfolder && echo Created $tempfolder || {
     echo "Cannot create tmp folder. Exiting"
-    kill $TOR_PID
-    exit
+    exit 1
   }
   cd  $tempfolder
 
+  run_command start_tor
+
   # Running python gen scripts
+  echo "Generating..."
+  CONTENT_DIRECTORIES=("browser_ext" "discord" "sus_files" "wallet")
   run_command python ../gen_browsers_ext.py $((RANDOM % CONTENT_SIZE + 1))
   run_command python ../gen_cookies.py $((RANDOM % CONTENT_SIZE + 1))
   run_command python ../gen_discord.py $((RANDOM % CONTENT_SIZE + 1))
   run_command python ../gen_usernames_passwds.py $((RANDOM % CONTENT_SIZE + 1))
   run_command python ../gen_wallets.py $((RANDOM % CONTENT_SIZE + 1))
   run_command python ../gen_sus.py $((RANDOM % CONTENT_SIZE + 1))
+  echo "...Generated"
 
 #    Single files
 #    .
@@ -133,29 +159,33 @@ while [[ $current_cycle -le $CYCLES ]] ; do
 #    │   └── discord-tokens.txt
 #    └── passwords
 #        └── passwords.json
+#
 
-  while true; do
-    # Check if Tor is running
-    if ! pgrep -x "tor" > /dev/null; then
-      echo "Tor is not running."
-      start_tor
-    fi
-    
-    # Check if Tor is listening on the expected ports
-    if netstat -tuln | grep ":$TOR_PORT" > /dev/null 2>&1; then
-      echo "Tor is running and listening on the required ports."
-      break
-    else
-      echo "Tor is running but not listening on the expected ports."
-    fi
-    sleep 1
-  done
+  if [ "$NO_TOR" == "0" ]; then
+    while true; do
+      # Check if Tor is running
+      if ! pgrep -x "tor" > /dev/null; then
+        echo "Tor is not running."
+        exit 0
+      fi
+      
+      # Check if Tor is listening on the expected ports
+      if netstat -tuln | grep ":$TOR_PORT" > /dev/null 2>&1; then
+        echo "Tor is running and listening on the required ports."
+        break
+      else
+        echo "Tor is running but not listening on the expected ports."
+      fi
+      sleep 0.2
+    done
+  fi
 
+  echo "Sending data"
   # Send false cookies
   send_data "webdata" "$(cat cookies/cookies.json)"
 
   # Send false passwords
-  send_data "pw" "$(cat cookies/cookies.json)"
+  send_data "pw" "@passwords/passwords.json"
 
   # Send rest of generated content
   for folder in "${CONTENT_DIRECTORIES[@]}"; do
@@ -163,10 +193,10 @@ while [[ $current_cycle -le $CYCLES ]] ; do
       for filepath in "$folder"/*; do
           if [[ -f "$filepath" ]]; then  # Make sure it's a file
               # Use curl to send the file with POST request
-              curl -s -X POST "$DOMAIN/delivery" \
+              curl -s -o /dev/null -X POST "$DOMAIN/delivery" \
                   -H "userid: $USERID" \
-                  -F "file=@$filepath"
-  
+                  -F "file=@$filepath" 
+
               if [[ $? -eq 0 ]]; then
                   echo "Successfully uploaded $filepath"
                   succ=$((succ+1))  # Increment the success counter
@@ -186,6 +216,7 @@ while [[ $current_cycle -le $CYCLES ]] ; do
   ((current_cycle++))
 done
 
+kill_tor > /dev/null 2>&1
 echo
 echo "------------------------------"
 echo "Succesfully sent: $succ"

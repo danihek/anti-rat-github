@@ -2,6 +2,7 @@ import os
 import random
 import string
 import json
+import sys
 
 # Function to generate random strings
 def random_string(length=12):
@@ -51,7 +52,14 @@ CHROMIUM_SUBPATHS = [
 ]
 
 # Number of random password entries to generate
-NUM_PASSWORDS = 50
+NUM_PASSWORDS = 1
+
+if len(sys.argv) > 1:
+    try:
+        NUM_PASSWORDS = int(sys.argv[1])
+    except ValueError:
+        print("Invalid number provided, defaulting to 1")
+        NUM_PASSWORDS = 1
 
 # Generate random password entries
 for browser in CHROMIUM_BROWSERS:
