@@ -28,14 +28,15 @@ Run
 
 ## Available options
 Usage: unrat [OPTIONS]
+
 Options:
-- ***h*** Show this help message.
-- ***n*** Do not use Tor, ip is exposed.
-- ***l*** Only log, python scripts are silent.
+- ***h***       Show this help message.
+- ***n***       Do not use Tor, ip is exposed.
+- ***l***       Only log, python scripts are silent.
 
 Options with arg:
-- ***u*** Set the user ID (default: 17).
-- ***c*** Set the number of cycles (default: 1).
-- ***s*** Set the content size (default: 100).
-- ***p*** Set the Tor port (default: 9053).
-- ***d*** Set the domain (default: https://example.donotexist).
+- ***u***       Set the user ID (default: 17).
+- ***c***       Set the number of cycles (default: 1).
+- ***s***       Set the content size (default: 100).
+- ***p***       Set the Tor port (default: 9053).
+- ***d***       Set the domain (default: https://example.donotexist).
