@@ -1,4 +1,4 @@
-# Anti rat punsher
+# Anti rat punisher
 
 ## Why?
 - because recently I've seen a lot of sus github accounts with these kind of **tricks** in repos to say at least.
@@ -15,27 +15,27 @@ I found that these 'rats' I don't know how to call them are very simmilar, so if
 Download repo and python requirements.
 Tor is optional but recommended.
 
-``
+```
 git clone https://github.com/danihek/anti-rat-github
 cd anti-rat-github
 python -m venv venv
 source venv/bin/activate
 pip install -m requirements.txt
-``
+```
 
 Run
 ``./unrat.sh -d https://example.donotexist``
 
 ## Available options
-
 Usage: unrat [OPTIONS]
-  -h        Show this help message.
-  -n        Do not use Tor, ip is exposed.
-  -l        Only log, python scripts are silent.
-
 Options:
-  -u USERID Set the user ID (default: 17).
-  -c CYCLES Set the number of cycles (default: 1).
-  -s CONTENT_SIZE Set the content size (default: 100).
-  -p TOR_PORT Set the Tor port (default: 9053).
-  -d DOMAIN Set the domain (default: https://example.donotexist).
+- ***h*** Show this help message.
+- ***n*** Do not use Tor, ip is exposed.
+- ***l*** Only log, python scripts are silent.
+
+Options with arg:
+- ***u*** Set the user ID (default: 17).
+- ***c*** Set the number of cycles (default: 1).
+- ***s*** Set the content size (default: 100).
+- ***p*** Set the Tor port (default: 9053).
+- ***d*** Set the domain (default: https://example.donotexist).
