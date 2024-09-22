@@ -18,9 +18,6 @@ Tor is optional but recommended.
 ```
 git clone https://github.com/danihek/anti-rat-github
 cd anti-rat-github
-python -m venv venv
-source venv/bin/activate
-pip install -m requirements.txt
 ```
 
 Run
