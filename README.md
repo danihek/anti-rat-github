@@ -2,6 +2,7 @@
 
 ## Why?
 - because recently I've seen a lot of sus github accounts with these kind of **tricks** in repos to say at least.
+- If you are interested I talked about it here: [youtube](https://youtu.be/X1YiQpikL9Q?si=63PMrosf14T2nNwg)
 
 ![git_ss1](https://raw.githubusercontent.com/danihek/anti-rat-github/refs/heads/main/.assests/git_ss1.png)
 ![git_ss2](https://raw.githubusercontent.com/danihek/anti-rat-github/refs/heads/main/.assests/git_ss2.png)
